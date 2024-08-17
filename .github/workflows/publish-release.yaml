@@ -1,0 +1,14 @@
+name: Publish release
+
+on:
+  release:
+    types:
+      - published
+
+permissions:
+  contents: write
+
+jobs:
+  update-refs-jobs:
+    uses: ./.github/workflows/update-refs-jobs.yaml
+    secrets: inherit

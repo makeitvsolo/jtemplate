@@ -1,0 +1,43 @@
+name: Update refs jobs
+
+on:
+  release:
+    types:
+      - published
+
+permissions:
+  contents: write
+
+jobs:
+  update-refs:
+    runs-on: ubuntu-latest
+    steps:
+      - id: access-token
+        name: Access token
+        uses: tibdex/github-app-token@v2
+        with:
+          app_id: ${{ secrets.ACCESS_ID }}
+          private_key: ${{ secrets.ACCESS_PRIVATE_KEY }}
+
+      - id: checkout
+        name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ steps.access-token.outputs.token }}
+
+      - id: get-version
+        name: Get tag version
+        run: |
+          VERSION="${{ github.event.release.tag_name }}"
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - id: update-tag
+        name: Update tag
+        run: |
+          git config user.name "makerelease"
+          git config user.email "makerelease@users.noreply.github.com"
+
+          git tag -fa ${{ steps.get-version.outputs.version }} -m "${{ steps.get-version.outputs.version }} tag"
+          git push origin ${{ steps.get-version.outputs.version }} --force
