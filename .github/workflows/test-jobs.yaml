@@ -1,0 +1,39 @@
+name: Test jobs
+
+on:
+  workflow_call:
+    inputs:
+      jdk-version:
+        type: number
+        required: true
+      jdk-distribution:
+        type: string
+        required: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - id: checkout
+        name: Checkout repository
+        uses: actions/checkout@v4
+
+      - id: setup-jdk
+        name: Setup jdk ${{ inputs.jdk-version }}-${{ inputs.jdk-distribution }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ inputs.jdk-version }}
+          distribution: ${{ inputs.jdk-distribution }}
+
+      - name: Restore Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
+          restore-keys: ${{ runner.os }}-gradle-
+
+      - id: gradle-test
+        name: Gradle test
+        run: ./gradlew test
