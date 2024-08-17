@@ -1,0 +1,55 @@
+name: Draft release jobs
+
+on:
+  workflow_call:
+    secrets:
+      ACCESS_ID:
+        required: true
+      ACCESS_PRIVATE_KEY:
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  draft-release:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'release/')
+    steps:
+      - id: access-token
+        name: Access token
+        uses: tibdex/github-app-token@v2
+        with:
+          app_id: ${{ secrets.ACCESS_ID }}
+          private_key: ${{ secrets.ACCESS_PRIVATE_KEY }}
+
+      - id: checkout
+        name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ steps.access-token.outputs.token }}
+
+      - id: extract-version
+        name: Extract release version
+        run: |
+          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
+          VERSION=${BRANCH_NAME#release/}
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - id: extract-notes
+        name: Extract release notes
+        uses: release-flow/keep-a-changelog-action@v3
+        with:
+          command: query
+          version: ${{ steps.extract-version.outputs.version }}
+
+      - id: draft-release
+        name: Draft release
+        run: |
+          gh release create ${{ steps.extract-version.outputs.version }} \
+          --draft \
+          --title "Release ${{ steps.extract-version.outputs.version }}" \
+          --notes "${{ steps.extract-notes.outputs.release-notes }}"
+        env:
+          GH_TOKEN: ${{ steps.access-token.outputs.token }}

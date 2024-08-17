@@ -1,0 +1,16 @@
+name: Draft release
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
+
+permissions:
+  contents: write
+
+jobs:
+  draft-release-jobs:
+    uses: ./.github/workflows/draft-release-jobs.yaml
+    secrets: inherit

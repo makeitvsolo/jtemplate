@@ -52,9 +52,12 @@ jobs:
           git config user.name "makerelease"
           git config user.email "makerelease@users.noreply.github.com"
           
+          git branch release/${{ steps.update-changelog.outputs.version }}
+          git checkout release/${{ steps.update-changelog.outputs.version }}
+          
           git add .
-          git commit -m "update manifest files"
-          git push
+          git commit -m "release ${{ steps.update-changelog.outputs.version }}"
+          git push -u origin release/${{ steps.update-changelog.outputs.version }}
 
       - id: open-pr
         name: Open pull-request
