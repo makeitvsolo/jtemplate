@@ -1,0 +1,25 @@
+name: Prepare release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release-type:
+        type: choice
+        required: true
+        description: Release type
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  prepare-release-jobs:
+    uses: ./.github/workflows/release-pr-jobs.yaml
+    with:
+      release-type: ${{ inputs.release-type }}
+    secrets: inherit
